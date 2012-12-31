@@ -1,21 +1,7 @@
-#include <assert.h>
-#include <errno.h>
-#include <limits.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "camera.h"
 
-#include <unistd.h>
-
-// Number of digits in the number.
-#define FNAME_DIGITS  5
-
-// Hackish bullcrap to get FNAME_DIGITS as a string when necessary.
-#define STRING(x) #x
-#define MACRO_STRING(x) STRING(x)
-
-// capture and fname_length are set to their initial values in initialize()
-int capture = 0;
+// capture_number is set to their initial values in initialize()
+int capture_number = 0;
 
 // When given the number, return the full filaname.
 char *number2filename(int number)
@@ -33,18 +19,59 @@ char *number2filename(int number)
 // Iterate until we find a usable file number.
 void initialize()
 {
-//  while (File.exist?(number2filename capture) {
-//    capture += 1;
-//  }
+	struct stat buf;
+	int i;
+	char *filename;
+	char *number = malloc(FNAME_DIGITS + 2); // FNAME_DIGITS + 1 digit + NULL byte
+
+	printf("Finding last file");
+
+	capture_number = -1;
+
+	do {
+		capture_number++;
+
+		sprintf(number, "%d", capture_number);
+
+		filename = number2filename(capture_number);
+		i = stat(filename, &buf);
+		if (strlen(number) > FNAME_DIGITS) {
+			// We should never get here...
+			error(1, 0, "%d is longer than FNAME_DIGITS (%d).", capture_number, FNAME_DIGITS);
+		}
+
+		if (i != 0) { // If the does not exist exists...
+			break;
+		}
+		putc('.', stdout);
+	} while (1);
+	printf(".\nDone: %s\n\n", number2filename(capture_number));
+}
+
+// Set up signals
+void signal_setup()
+{
+	struct sigaction action;
+
+	action.sa_handler = capture;
+	sigemptyset(&action.sa_mask);
+	action.sa_flags = 0;
+
+	sigaction(SIGUSR1, &action, NULL);
 }
 
 // Capture a still image
 void capture_still()
 {
-	puts("meep");
-	printf("ffmpeg -f video4linux2 -i /dev/video0 -v:f 1 \"%s\"", number2filename(capture));
+	printf("ffmpeg -f video4linux2 -i /dev/video0 -v:f 1 \"%s\"\n", number2filename(capture_number));
 	
-	capture += 1;
+	capture_number++;
+}
+
+// Capture an image, video, etc..
+void capture()
+{
+	capture_still(); // We can add logic if we ever get a capture_video()
 }
 
 void camera() {
@@ -53,17 +80,21 @@ void camera() {
 	   the right place in the tree. It could also execve
 	   something instead of looping. */
 
-	initialize();
-
-	// Insert magic to call capture_still() on each SIGUSR1
-	printf("%s\n%s\n%s\n%s\n", number2filename(0), number2filename(1), number2filename(12), number2filename(12345));
+	signal_setup();
 
 	while (1)
 		sleep(UINT_MAX);
 }
 
-int main(void)
+int main(int argc, const char **argv)
 {
+	initialize();
+
+	if ((argc > 1) && (strncmp(argv[1], "-nofork", 7) == 0)) {
+		camera();
+		return 0;
+	}
+
 #ifndef DEBUG
 	int r;
 	r = fork();
