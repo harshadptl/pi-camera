@@ -88,6 +88,14 @@ void camera() {
 
 int main(int argc, const char **argv)
 {
+	if ((argc > 1) && ((strncmp(argv[1], "-help", 5) == 0) || (strncmp(argv[1], "--help", 6) == 0) || (strncmp(argv[1], "-h", 2) == 0))) {
+		puts("Usage: camera [ARG ...]\n"
+		     "\n"
+		     "-nofork  Don't fork.\n"
+		     "-help    This.");
+		return 0;
+	}
+
 	initialize();
 
 	if ((argc > 1) && (strncmp(argv[1], "-nofork", 7) == 0)) {
