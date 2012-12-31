@@ -16,12 +16,14 @@
 
 #include "config.h"
 
+// 14 = <length of capture_> + <length of .jpeg> + 1 for the null byte
+#define FNAME_LENGTH (14 + FNAME_DIGITS)
 
 // Hackish bullcrap to get FNAME_DIGITS as a string when necessary.
 #define STRING(x) #x
 #define MACRO_STRING(x) STRING(x)
 
-char *number2filename(int number);
+char *number2filename(char *name, int number);
 void initialize();
 void signal_setup();
 void capture_still();

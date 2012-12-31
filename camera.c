@@ -4,12 +4,12 @@
 int capture_number = 0;
 
 // When given the number, return the full filaname.
-char *number2filename(int number)
+char *number2filename(char *name, int number)
 {
 	// Magic number explanation:
 	//   14 = <length of capture_> + <length of .jpeg> + 1 for the null byte
 
-	char *name = (char*)malloc(14 + FNAME_DIGITS);
+	//char *name = (char*)malloc(14 + FNAME_DIGITS);
 
 	snprintf(name, 14 + FNAME_DIGITS, "capture_%0" MACRO_STRING(FNAME_DIGITS) "d.jpeg", number);
 
@@ -23,6 +23,7 @@ void initialize()
 	int i;
 	char *filename;
 	char *number = malloc(FNAME_DIGITS + 2); // FNAME_DIGITS + 1 digit + NULL byte
+	char *name = malloc(FNAME_LENGTH);
 
 	printf("Finding last file");
 
@@ -33,7 +34,7 @@ void initialize()
 
 		sprintf(number, "%d", capture_number);
 
-		filename = number2filename(capture_number);
+		filename = number2filename(name, capture_number);
 		i = stat(filename, &buf);
 		if (strlen(number) > FNAME_DIGITS) {
 			// We should never get here...
@@ -45,7 +46,8 @@ void initialize()
 		}
 		putc('.', stdout);
 	} while (1);
-	printf(".\nDone: %s\n\n", number2filename(capture_number));
+	printf(".\nDone: %s\n\n", number2filename(name, capture_number));
+	free(name);
 }
 
 // Set up signals
@@ -63,8 +65,18 @@ void signal_setup()
 // Capture a still image
 void capture_still()
 {
-	printf("ffmpeg -f video4linux2 -i /dev/video0 -v:f 1 \"%s\"\n", number2filename(capture_number));
-	
+	char *str  = malloc(255),
+	     *name = malloc(FNAME_LENGTH);
+
+	printf("Capturing %s.\n", number2filename(name, capture_number));
+
+	sprintf(str, "ffmpeg -f video4linux2 -i /dev/video0 -v:f 1 %s", number2filename(name, capture_number));
+	system(str);
+	puts(str);
+
+	free(name);
+	free(str);
+
 	capture_number++;
 }
 
@@ -103,7 +115,6 @@ int main(int argc, const char **argv)
 		return 0;
 	}
 
-#ifndef DEBUG
 	int r;
 	r = fork();
 	if (r == 0) {
@@ -111,11 +122,8 @@ int main(int argc, const char **argv)
 		close(1);
 		close(2);
 		setsid();
-#endif
 
 		camera();
-
-#ifndef DEBUG
 	} else if (r == -1) {
 		fprintf(stderr, "Could not fork: %s\n", strerror(errno));
 		exit(-1);
@@ -123,7 +131,6 @@ int main(int argc, const char **argv)
 		printf("%d\n", r);
 		exit(0);
 	}
-#endif
 
 	return 0;
 }

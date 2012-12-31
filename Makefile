@@ -3,9 +3,6 @@ CC := clang
 all:
 	${CC} -Wall camera.c -o camera -lm
 
-debug:
-	${CC} -Wall -DDEBUG camera.c -o camera -lm
-
 clean:
 	rm -f camera
 
