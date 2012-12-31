@@ -1,8 +1,10 @@
+CC := clang
+
 all:
-	gcc -Wall camera.c -o camera -lm
+	${CC} -Wall camera.c -o camera -lm
 
 debug:
-	gcc -Wall -DDEBUG camera.c -o camera -lm
+	${CC} -Wall -DDEBUG camera.c -o camera -lm
 
 clean:
 	rm -f camera
