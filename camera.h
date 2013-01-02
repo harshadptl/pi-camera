@@ -14,7 +14,10 @@
 
 #include <unistd.h>
 
-#include "config.h"
+// Number of digits in the number.
+// If you need more than 9 digits, which allows 1 billion photos,
+// you have bigger problems.
+#define FNAME_DIGITS 9
 
 // 14 = <length of capture_> + <length of .jpeg> + 1 for the null byte
 #define FNAME_LENGTH (14 + FNAME_DIGITS)
