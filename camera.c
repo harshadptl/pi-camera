@@ -71,8 +71,8 @@ void capture_still()
 	printf("Capturing %s.\n", number2filename(name, capture_number));
 
 	sprintf(str, "ffmpeg -f video4linux2 -i /dev/video0 -v:f 1 %s", number2filename(name, capture_number));
-	system(str);
 	puts(str);
+	system(str);
 
 	free(name);
 	free(str);
